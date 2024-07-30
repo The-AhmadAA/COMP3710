@@ -7,7 +7,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # use numpy to create a 2D array of complex numbers on [-2,2]x[-2,2]
 
-Y, X = np.mgrid[-1.3:1.3:0.005, -2:1:0.005]
+Y, X = np.mgrid[-1.3:1.3:0.005, -2:1:0.005] # default values according to the prac sheet
+# Y, X = np.mgrid[0.5:1:0.00025, -0.8:0.2:0.00025] # zoomed in version
 
 # load into pytorch tensors
 x = torch.Tensor(X)
@@ -22,9 +23,21 @@ zs = zs.to(device)
 ns = ns.to(device)
 
 # Mandelbrot set
+# for i in range(200):
+#     # compute the new values of z: z^2 + x
+#     zs_ = zs * zs + z
+    
+#     # Have we diverged with this new value?
+#     not_diverged = torch.abs(zs_) < 4.0
+
+#     # Update variables to compute
+#     ns += not_diverged
+#     zs = zs_
+
+# Julia set
 for i in range(200):
     # compute the new values of z: z^2 + x
-    zs_ = zs * zs + z
+    zs_ = zs * zs + 0.285
     
     # Have we diverged with this new value?
     not_diverged = torch.abs(zs_) < 4.0
