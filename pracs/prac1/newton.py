@@ -19,6 +19,8 @@ colors = ['b', 'r', 'g', 'y']
 # the threshold delta for convergence to a root
 TOL = 1.e-8
 
+root_indices = []
+
 def newton(z0, f, fprime, MAX_IT=100):
     """
     The Newton-Raphson method applied to f(z).
@@ -60,15 +62,20 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
         If r is not in roots, concat the new root with the roots Tensor.
         """
 
-        # roots_tensor = torch.Tensor(roots).clone()
         # TODO will need to modify this function so that the indices are returned?
-        return torch.where(torch.isclose(roots, r, atol=TOL), roots, r)
+        
+        output = torch.nonzero(torch.isclose(roots.unsqueeze_(1), r.unsqueeze_(1), atol=TOL))
+        
+        if not output.numel():
+            root_indices.append(r)
+
+        print(output)
+        return output
 
     # set up the complex plane of values
     x = torch.Tensor(X)
     y = torch.Tensor(Y)
     z = torch.complex(x, y)
-    roots = torch.empty((0,), dtype=torch.complex64, device=device)
     # set up tensors for the roots(?) and for the root indices
     rs = torch.zeros_like(z)
     ms = torch.zeros_like(z)
@@ -78,27 +85,17 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
     z = z.to(device)
     rs = rs.to(device)
     ms = ms.to(device)
-    roots = roots.to(device)
     # perform newton's method on all zs
     rs = newton(z, f, fprime)
     # print(rs)
-    # ===================================================================================
-    # Tensor.unique doesn't work for complex values. Workaround involves separating into
-    # real and imag parts, courtesy of chatGPT
 
-    roots_real = rs.real
-    roots_imag = rs.imag
-    recombined = torch.stack((roots_real, roots_imag), dim=1)
+    roots = torch.as_tensor(np.unique(rs.numpy()), dtype=torch.complex64)
+    roots = roots.to(device)
 
-    unique_roots = torch.unique(recombined, dim=0)
-
-    unique_complex_roots = unique_roots[:, 0] + 1j * unique_roots[:, 1]
-    print(unique_complex_roots)
-    # ===============================================================================
     # allocate all the points to particular roots
-    # ms = get_root_index(roots, rs)
+    ms = get_root_index(roots, rs)
 
-    nroots = len(roots)
+    nroots = len(root_indices)
 
 
 
@@ -108,10 +105,10 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
     else:
         # Use a list of colors for the colormap: one for each root.
         cmap = ListedColormap(colors[:nroots])
-    # print(ms)
-    # plt.imshow(ms, cmap=cmap, origin='lower')
-    # plt.axis('off')
-    # plt.show()
+    print(ms)
+    plt.imshow(ms, cmap=cmap, origin='lower')
+    plt.axis('off')
+    plt.show()
 
 
 f = lambda z: z**3 + 3
