@@ -83,9 +83,12 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
 
     combined = torch.stack((real_parts, imag_parts), dim=-1).reshape(-1, 2)
 
+    #----------------------------------------------------------------------------------
     # rounding to truncate floating point values to ensure that the correct number of unique values found
+    # courtesy of this forum post https://discuss.pytorch.org/t/round-tensor-to-x-decimal-places/25832
     n_digits = 3
     rounded = (combined * 10**n_digits).round() / (10**n_digits)
+    # ----------------------------------------------------------------------------------
 
     # Find unique rows and the corresponding indices
     unique_roots, inverse_indices = torch.unique(rounded, dim=0, return_inverse=True)
