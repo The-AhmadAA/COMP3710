@@ -53,7 +53,7 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     xmin, xmax, ymin, ymax = domain
-    Y, X = np.mgrid[xmin:xmax:1/n, ymin:ymax:1/n]
+    Y, X = np.mgrid[ymin:ymax:(ymax - ymin)/n, xmin:xmax:(xmax - xmin)/n]
 
     def get_root_index(roots, r):
         """
@@ -62,20 +62,18 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
         If r is not in roots, concat the new root with the roots Tensor.
         """
 
-        # TODO will need to modify this function so that the indices are returned?
+        # TODO not successfully returning a 
         
         output = torch.nonzero(torch.isclose(roots.unsqueeze_(1), r.unsqueeze_(1), atol=TOL))
-        
-        if not output.numel():
-            root_indices.append(r)
 
-        print(output)
+        # print(output)
         return output
 
     # set up the complex plane of values
     x = torch.Tensor(X)
     y = torch.Tensor(Y)
     z = torch.complex(x, y)
+
     # set up tensors for the roots(?) and for the root indices
     rs = torch.zeros_like(z)
     ms = torch.zeros_like(z)
@@ -85,19 +83,28 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
     z = z.to(device)
     rs = rs.to(device)
     ms = ms.to(device)
+
     # perform newton's method on all zs
     rs = newton(z, f, fprime)
-    # print(rs)
 
-    roots = torch.as_tensor(np.unique(rs.numpy()), dtype=torch.complex64)
-    roots = roots.to(device)
+    # Can't easily find unique values as Tensor.unique doesn't support complex values - 
+    # Workaround courtesy of chatGPT 
+    # ================================================================================
+    # Separate real and imaginary parts
+    real_parts = rs.real
+    imag_parts = rs.imag
 
-    # allocate all the points to particular roots
-    ms = get_root_index(roots, rs)
+    combined = torch.stack((real_parts, imag_parts), dim=-1).reshape(-1, 2)
 
-    nroots = len(root_indices)
+    # Find unique rows and the corresponding indices
+    unique_roots, inverse_indices = torch.unique(combined, dim=0, return_inverse=True)
 
+    # Reshape the indices back to the grid shape
+    ms = inverse_indices.view(n, n).cpu().numpy()   
 
+    # ================================================================================
+    # Assign color mapping to indices
+    nroots = len(unique_roots)
 
     if nroots > len(colors):
         # Use a "continuous" colormap if there are too many roots.
@@ -105,7 +112,7 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
     else:
         # Use a list of colors for the colormap: one for each root.
         cmap = ListedColormap(colors[:nroots])
-    print(ms)
+    # print(ms)
     plt.imshow(ms, cmap=cmap, origin='lower')
     plt.axis('off')
     plt.show()
@@ -114,4 +121,4 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
 f = lambda z: z**3 + 3
 fprime = lambda z: 3*z**2
 
-plot_newton_fractal(f, fprime, n=800, domain=(-1, 1, -1, 1))
+plot_newton_fractal(f, fprime, n=1600, domain=(-1, 2, -1, 2))
