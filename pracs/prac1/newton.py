@@ -21,7 +21,7 @@ TOL = 1.e-8
 
 root_indices = []
 
-def newton(z0, f, fprime, MAX_IT=100):
+def newton(z0, f, fprime, MAX_IT=1000):
     """
     The Newton-Raphson method applied to f(z).
 
@@ -55,20 +55,6 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
     xmin, xmax, ymin, ymax = domain
     Y, X = np.mgrid[ymin:ymax:(ymax - ymin)/n, xmin:xmax:(xmax - xmin)/n]
 
-    def get_root_index(roots, r):
-        """
-        Get the index of r in the Tensor roots.
-
-        If r is not in roots, concat the new root with the roots Tensor.
-        """
-
-        # TODO not successfully returning a 
-        
-        output = torch.nonzero(torch.isclose(roots.unsqueeze_(1), r.unsqueeze_(1), atol=TOL))
-
-        # print(output)
-        return output
-
     # set up the complex plane of values
     x = torch.Tensor(X)
     y = torch.Tensor(Y)
@@ -90,17 +76,24 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
     # Can't easily find unique values as Tensor.unique doesn't support complex values - 
     # Workaround courtesy of chatGPT 
     # ================================================================================
+
     # Separate real and imaginary parts
     real_parts = rs.real
     imag_parts = rs.imag
 
     combined = torch.stack((real_parts, imag_parts), dim=-1).reshape(-1, 2)
 
+    # rounding to truncate floating point values to ensure that the correct number of unique values found
+    n_digits = 3
+    rounded = (combined * 10**n_digits).round() / (10**n_digits)
+
     # Find unique rows and the corresponding indices
-    unique_roots, inverse_indices = torch.unique(combined, dim=0, return_inverse=True)
+    unique_roots, inverse_indices = torch.unique(rounded, dim=0, return_inverse=True)
+
+    print(unique_roots)
 
     # Reshape the indices back to the grid shape
-    ms = inverse_indices.view(n, n).cpu().numpy()   
+    ms = inverse_indices.view(n, n).cpu().numpy()
 
     # ================================================================================
     # Assign color mapping to indices
@@ -121,4 +114,4 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
 f = lambda z: z**3 + 3
 fprime = lambda z: 3*z**2
 
-plot_newton_fractal(f, fprime, n=1600, domain=(-1, 2, -1, 2))
+plot_newton_fractal(f, fprime, n=1600, domain=(-0.5, 0.5, -0.5, 0.5))
