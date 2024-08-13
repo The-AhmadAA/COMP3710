@@ -12,7 +12,7 @@ def main(fractal, zoomed=False):
 
     # use numpy to create a 2D array of complex numbers on [-2,2]x[-2,2]
     if not zoomed:
-        Y, X = np.mgrid[-1.3:1.3:0.005, -2:1:0.005] # default values according to the prac sheet
+        Y, X = np.mgrid[-1.3:1.3:-0.005, -2:1:-0.005] # default values according to the prac sheet
     # Y, X = np.mgrid[-3.14:3.14:0.005, -3.14:3.14:0.005] # for the sin version of a Newton Fractal
     else:
         Y, X = np.mgrid[0.5:1:0.00025, -0.8:0.2:0.00025] # zoomed in version

@@ -23,10 +23,10 @@ y = y.to(device)
 # z = torch.exp(-(x**2 + y**2)/2.0)
 
 # Compute the Sin
-# z = torch.sin(x)
+z = torch.sin(3*x)
 
 # Combine the Gaussian and a sin function?
-z = torch.sin(x + y) * torch.exp(-(x**2 + y**2)/2.0)
+# z = torch.sin(x + y) * torch.exp(-(x**2 + y**2)/2.0)
 
 #plot
 plt.imshow(z.cpu().numpy())

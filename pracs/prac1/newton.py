@@ -21,7 +21,7 @@ TOL = 1.e-8
 
 root_indices = []
 
-def newton(z0, f, fprime, MAX_IT=1000):
+def newton(z0, f, fprime, MAX_IT=2000):
     """
     The Newton-Raphson method applied to f(z).
 
@@ -93,7 +93,7 @@ def plot_newton_fractal(f, fprime, n=400, domain=(-1, 1, -1, 1)):
     # Find unique rows and the corresponding indices
     unique_roots, inverse_indices = torch.unique(rounded, dim=0, return_inverse=True)
 
-    print(unique_roots)
+    # print(unique_roots)
 
     # Reshape the indices back to the grid shape
     ms = inverse_indices.view(n, n).cpu().numpy()
